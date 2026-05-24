@@ -1,0 +1,42 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function: is the requester authenticated as this uid?
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Helper: validate transaction write data
+    function validTransaction() {
+      let data = request.resource.data;
+      return data.amount is number
+        && data.amount > 0
+        && data.direction in ['lent', 'borrowed']
+        && data.date is timestamp;
+    }
+
+    // User profile
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+
+      // People sub-collection
+      match /people/{personId} {
+        allow read, write: if isOwner(uid);
+
+        // Transactions sub-collection
+        match /transactions/{txId} {
+          allow read: if isOwner(uid);
+          allow create: if isOwner(uid) && validTransaction();
+          allow update: if isOwner(uid) && validTransaction();
+          allow delete: if isOwner(uid);
+        }
+      }
+
+      // Settlements sub-collection
+      match /settlements/{settlementId} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+  }
+}
