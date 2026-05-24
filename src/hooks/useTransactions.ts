@@ -13,13 +13,15 @@ import {
   deleteTransaction as apiDeleteTransaction,
   settleAll as apiSettleAll,
 } from '../services/transactionService';
-import { TransactionDirection } from '../types/models';
+import { Transaction, TransactionDirection } from '../types/models';
+
+const EMPTY_ARRAY: Transaction[] = [];
 
 export const useTransactions = (personId?: string) => {
   const dispatch = useAppDispatch();
   const authUser = useAppSelector((state) => state.auth.user);
   const transactions = useAppSelector(
-    (state) => (personId ? state.transactions.byPersonId[personId] : []) || []
+    (state) => (personId ? state.transactions.byPersonId[personId] : EMPTY_ARRAY) || EMPTY_ARRAY
   );
   const loading = useAppSelector((state) => state.transactions.loading);
   const error = useAppSelector((state) => state.transactions.error);
